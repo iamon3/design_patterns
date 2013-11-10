@@ -1,4 +1,4 @@
-package creational.objectPool;
+package creational.objectPool.eg1;
 
 import java.sql.Connection;
 

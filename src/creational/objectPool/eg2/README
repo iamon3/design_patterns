@@ -1,0 +1,84 @@
+Blog with code can be found here
+
+http://www.javacodegeeks.com/2012/09/a-generic-and-concurrent-object-pool.html
+
+In this post we will take a look at how we can create an object pool in Java. In recent years, the performance of the JVM has multiplied manifold that object pooling for better performance has been made almost redundant for most type of objects. In essence, creation of objects are no longer considered as expensive as it was done before.
+
+However there are some kind of objects that certainly proves costly on creation. Objects such as Threads, database connection objects etc are not lightweight objects and are slightly more expensive to create. In any application we require the use of multiple objects of the above kind. So it would be great if there was a very way easy to create and mantain an object pool of that type so that objects can be dynamically used and reused, without the client code being bothered about the live cycle of the objects.
+Before actually writing the code for an object pool, let us first identify the main requirements that any object pool must answer.
+
+    The pool must let clients use an object if any is available.
+    It must reuse the objects once they are returned to the pool by a client.
+    If required, it must be able to create more objects to satisfy growing demands of the client.
+    It must provide a proper shutdown mechanism, such that on shutdown no memory leaks occur.
+
+Needless to say, the above points will form the basis of the interface that we will expose to our clients.
+So our interface declaration will be as follows: 
+
+"Pool" interface.
+
+The above interface is intentionally made very simple and generic to support any type of objects. It provides methods to get/return an object from/to the pool. It also provides a shutdown mechanism to dispose of the objects.
+
+Now we try to create an implementation of the above interface. 
+But before doing that it is important to note that an ideal release() method will first try to check if the object returned by the client is still reusable. If yes then it will return it to the pool else the object has to be discarded. We want every implementation of the Pool interface to follow this rule. So before creating a concrete implementation, we create an abstract implementation hat imposes this restriction on subsequent implementations. Our abstract implementation will be called, surprise, AbstractPool and its definition will be as follows:
+
+"AbstractPool"
+
+In the above class, we have made it mandatory for object pools to validate an object before returning it to the pool. To customize the behaviour of their pools the implementations are free to chose the way they implement the three abstract methods. They will decide using their own logic, how to check if an object is valid for reuse [the validate() method], what to do if the object returned by a client is not valid [the handleInvalidReturn() method] and the actual logic to return a valid object to the pool [the returnToPool() method].
+
+Now having the above set of classes we are almost ready for a concrete implementation. But the catch is that since the above classes are designed to support generic object pools, hence a generic implementation of the above classes will not know how to validate an object [since the objects will be generic :-)]. Hence we need something else that will help us in this.
+
+What we actually need is a common way to validate an object so that the concrete Pool implementations will not have to bother about the type of objects being validated. So we introduce a new interface, Validator, that defines methods to validate an object. Our definition of the Validator interface will be as follows:
+
+"Validator"
+
+The above interface defines methods to check if an object is valid and also a method to invalidate and object. The invalidate method should be used when we want to discard an object and clear up any memory used by that instance. Note that this interface has little significance by itself and makes sense only when used in context of an object pool. So we define this interface inside the top level Pool interface. This is analogous to the Map and Map.Entry interfaces in the Java Collections Library.
+
+We are almost ready for a concrete implementation. But before that we need one final weapon, which is actually the most important weapon of an object pool. It is called ‘the ability to create new objects’.c Sine our object pools will be generic, they must have knowledge of how to create new objects to populate its pool. This functionality must also not depend on the type of the object pool and must be a common way to create new objects. The way to do this will be an interface, called ObjectFactory that defines just one method, which is ‘how to create a new object’. 
+Our ObjectFactory interface is as follows:
+
+"ObjectFactory"
+
+We are finally done with our helper classes and now we will create a concrete implementation of the Pool interface. Since we want a pool that can be used in concurrent applications, we will create a blocking pool that blocks the client if no objects are available in the pool. The blocking mechanism will block indefinitely until an objects becomes available. This kind of implementation begets that another method be there which will block only for a given time-out period, if any object becomes available before the time out that object is returned otherwise after the timeout instead of waiting for ever, a null object is returned. This implementation is analogous to a LinkedBlockingQueue implementation of the Java Concurrency API and thus before implementing the actual class we expose another implementation, BlockingPool, which is analogous to the BlockingQueue interface of the Java Concurrency API.
+
+Hence the Blockingpool interface declaration is as follows:
+
+"BlockingPool"
+
+And our BoundedBlockingPool implementation will be as follows:
+
+"BoundedBlockingPool"
+
+The above is a very basic object pool backed internally by a LinkedBlockingQueue. The only method of interest is the returnToPool() method. Since the internal storage is a blocking pool, if we tried to put the returned element directly into the LinkedBlockingPool, it might block he client if the queue is full. But we do not want a client of an object pool to block just for a mundane task like returning an object to the pool. So we have made the actual task of inserting the object into the LinkedBlockingQueue as an asynchronous task and submit it to an Executor instance so that the client thread can return immediately.
+
+Now we will use the above object pool into our code. We will use the object pool to pool some database connection objects. Hence we will need a Validator to validate our database connection objects.
+
+Our JDBCConnectionValidator will look like this:
+
+"JDBCConnectionValidator"
+
+And our JDBCObjectFactory, that will enable the object pool to create new objects will be as follows:
+
+"JDBCObjectFactory"
+
+Now we create a JDBC object pool using the above Validator and ObjectFactory:
+
+"Main"
+
+As a bonus for reading the entire post. I will provide another implementation of the Pool interface that is essentially a non blocking object pool. The only difference of this implementation for the previous one is that this implementation does not block the client if an element is unavailable, rather return null. Here it goes:
+
+"BoundedPool"
+
+Considering we are now two implementations strong, it is better to let users create our pools via factory with meaningful names. Here is the factory:
+
+"PoolFactory"
+
+Thus our clients now can create object pools in a more readable manner:
+
+"Main"
+
+And so ends our long post. This one was long overdue. Feel free to use it, change it, add more implementations.
+
+Happy coding and don’t forget to share!
+
+Reference: A Generic and Concurrent Object Pool from our JCG partner Sarma Swaranga at the The Java HotSpot blog.

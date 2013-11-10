@@ -1,7 +1,7 @@
 /**
  * Connection pool should be Singleton instance.
  */
-package creational.objectPool;
+package creational.objectPool.eg1;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

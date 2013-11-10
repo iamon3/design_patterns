@@ -1,7 +1,7 @@
 /**
  * Code is copied from sourcemaking.com ConnectionPool should be Singleton class.
  */
-package creational.objectPool;
+package creational.objectPool.eg1;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
