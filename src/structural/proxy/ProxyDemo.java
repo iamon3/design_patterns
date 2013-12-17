@@ -39,7 +39,7 @@ public class ProxyDemo {
 				if (str.equals("quit")) break;             // Receive - 123 456
 			}                                            // Send ---- 234 567
 			System.out.print( "Send ---- " );            // Receive - 345 678
-			str = Read.aString();                        //
+			str = "Is it correct?";//Read.aString();                        //
 			socket.writeLine( str );                     // java ProxyDemo second
 			if (str.equals("quit")) break;               // Send ---- 123 456
 		}                                              // Receive - 234 567
