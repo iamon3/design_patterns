@@ -7,33 +7,53 @@ package behavioral.chainOfResponsibilty.eg2.after;
 class Handler
 {
     private static java.util.Random s_rn = new java.util.Random();
-    private static int s_next = 1;
-    private int m_id = s_next++;
-    private Handler m_next;
+    
+    // At the beginning total number of handlers will be 1. 
+    // After an insertion of a handler, this count is incremented.
+    private static int totalHandlers = 1;
+    
+    // This handler's Id.
+    private int handlerId = totalHandlers++;
+    
+    // Reference to the next handler
+    private Handler nextHandler;
 
+    /**
+     * Adds the next node i.e. handler at the end of the chain recursively
+     */
     public void add(Handler next)
     {
-        if (m_next == null)
-          m_next = next;
+        if (nextHandler == null)
+          nextHandler = next;
         else
-          m_next.add(next);
+          nextHandler.add(next);
     }
+    
+    /**
+     * This function is required to assign the root handler of handlers chain.
+     * TODO Looks like there is an error in the logic. Rectify it.
+     */
     public void wrap_around(Handler root)
     {
-        if (m_next == null)
-          m_next = root;
+        if (nextHandler == null)
+          nextHandler = root;
         else
-          m_next.wrap_around(root);
+          nextHandler.wrap_around(root);
     }
+    
+    /**
+     * Handle the request, do the requisite processing and / or forward the request to the next handler
+     * in the chain.
+     */
     public void handle(int num)
     {
         if (s_rn.nextInt(4) != 0)
         {
-            System.out.print(m_id + "-busy  ");
-            m_next.handle(num);
+            System.out.print(handlerId + "-busy  ");
+            nextHandler.handle(num);
         }
         else
-          System.out.println(m_id + "-handled-" + num);
+          System.out.println(handlerId + "-handled-" + num);
     }
 }
 
@@ -52,7 +72,7 @@ public class ChainDemo
 }
 
 /**
- * Output
+ * Expected Output
  * 1-busy  2-busy  3-handled-1
 1-busy  2-busy  3-busy  4-busy  1-handled-2
 1-busy  2-busy  3-busy  4-busy  1-busy  2-busy
