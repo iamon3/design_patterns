@@ -1,4 +1,4 @@
 design_patterns
 ===============
 
-I will try here to capture software design patterns through Java.
+Software design pattern is extremely important concept in the Software Development. This is a collection of useful examples on design patterns.
