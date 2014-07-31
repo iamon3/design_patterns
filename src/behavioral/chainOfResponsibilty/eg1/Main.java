@@ -29,7 +29,9 @@ abstract class Handler
 		m_successor = successor;
 	}
 
-	public abstract void handleRequest(Request request);
+	public void handleRequest(Request request){
+		m_successor.handleRequest(request);
+	}
 }
 
 class ConcreteHandlerOne extends Handler
@@ -44,8 +46,7 @@ class ConcreteHandlerOne extends Handler
 						 + request.getValue());
 		}
 		else
-		{
-			// Issue will be fixed soon.
+		{			
 			super.handleRequest(request);
 		}
 	}
